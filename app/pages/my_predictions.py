@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.prediction_state import PredictionState
-from app.components.navbar import navbar
+from app.components.page import page_layout
 from app.models import Match, Prediction
 
 
@@ -175,89 +175,80 @@ def prediction_mobile_card(match: Match) -> rx.Component:
 
 
 def my_predictions_page() -> rx.Component:
-    return rx.el.div(
-        navbar(),
+    return page_layout(
+        rx.el.div(
+            prediction_stat_card(
+                "Total Points",
+                PredictionState.current_user.total_points.to_string(),
+                "trophy",
+                "indigo",
+            ),
+            prediction_stat_card(
+                "Matches Predicted",
+                PredictionState.my_prediction_list.length().to_string(),
+                "target",
+                "blue",
+            ),
+            prediction_stat_card("Accuracy", "56%", "percent", "green"),
+            class_name="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10",
+        ),
         rx.el.div(
             rx.el.div(
-                rx.el.h1(
-                    "My Predictions", class_name="text-3xl font-bold text-gray-900 mb-8"
-                ),
-                rx.el.div(
-                    prediction_stat_card(
-                        "Total Points",
-                        PredictionState.current_user.total_points.to_string(),
-                        "trophy",
-                        "indigo",
-                    ),
-                    prediction_stat_card(
-                        "Matches Predicted",
-                        PredictionState.my_prediction_list.length().to_string(),
-                        "target",
-                        "blue",
-                    ),
-                    prediction_stat_card("Accuracy", "56%", "percent", "green"),
-                    class_name="grid grid-cols-1 md:grid-cols-3 gap-6 mb-10",
-                ),
-                rx.el.div(
-                    rx.el.div(
-                        rx.el.table(
-                            rx.el.thead(
-                                rx.el.tr(
-                                    rx.el.th(
-                                        "Match",
-                                        class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Date",
-                                        class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Your Pick",
-                                        class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Result",
-                                        class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                                    ),
-                                    rx.el.th(
-                                        "Points",
-                                        class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
-                                    ),
-                                ),
-                                class_name="bg-gray-50",
+                rx.el.table(
+                    rx.el.thead(
+                        rx.el.tr(
+                            rx.el.th(
+                                "Match",
+                                class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
                             ),
-                            rx.el.tbody(
-                                rx.foreach(
-                                    PredictionState.matches,
-                                    lambda m: rx.cond(
-                                        PredictionState.my_predictions.contains(m.id),
-                                        prediction_history_row(m),
-                                        rx.fragment(),
-                                    ),
-                                ),
-                                class_name="bg-white divide-y divide-gray-200",
+                            rx.el.th(
+                                "Date",
+                                class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
                             ),
-                            class_name="min-w-full divide-y divide-gray-200",
+                            rx.el.th(
+                                "Your Pick",
+                                class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+                            ),
+                            rx.el.th(
+                                "Result",
+                                class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+                            ),
+                            rx.el.th(
+                                "Points",
+                                class_name="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider",
+                            ),
                         ),
-                        class_name="hidden md:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg",
+                        class_name="bg-gray-50",
                     ),
-                    rx.el.div(
+                    rx.el.tbody(
                         rx.foreach(
                             PredictionState.matches,
                             lambda m: rx.cond(
                                 PredictionState.my_predictions.contains(m.id),
-                                prediction_mobile_card(m),
+                                prediction_history_row(m),
                                 rx.fragment(),
                             ),
                         ),
-                        class_name="md:hidden space-y-4",
+                        class_name="bg-white divide-y divide-gray-200",
                     ),
-                    class_name="flex flex-col",
+                    class_name="min-w-full divide-y divide-gray-200",
                 ),
-                class_name="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
+                class_name="hidden md:block overflow-hidden shadow ring-1 ring-black ring-opacity-5 sm:rounded-lg",
             ),
-            class_name="py-10 bg-gray-50 min-h-screen",
+            rx.el.div(
+                rx.foreach(
+                    PredictionState.matches,
+                    lambda m: rx.cond(
+                        PredictionState.my_predictions.contains(m.id),
+                        prediction_mobile_card(m),
+                        rx.fragment(),
+                    ),
+                ),
+                class_name="md:hidden space-y-4",
+            ),
+            class_name="flex flex-col",
         ),
+        title="My Predictions",
+        description="Review your past predictions and see your overall performance.",
         on_mount=PredictionState.load_data,
-        class_name="font-['Inter']",
     )
