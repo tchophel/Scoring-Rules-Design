@@ -1,0 +1,11 @@
+staticfiles/
+node_modules/
+npm-debug.log
+.DS_Store
+__pycache__/
+*.pyc
+*.pyo
+*.pyd
+*.db
+*.sqlite3
+*.log
