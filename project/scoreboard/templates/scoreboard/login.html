@@ -1,0 +1,18 @@
+{% extends 'scoreboard/base.html' %}
+
+{% block title %}Login{% endblock %}
+
+{% block content %}
+<div class="max-w-md mx-auto">
+    <div class="text-center mb-10">
+        <h1 class="text-3xl font-bold text-gray-900">Sign In</h1>
+    </div>
+    <div class="bg-white p-8 shadow-lg sm:rounded-2xl">
+        <form method="post">
+            {% csrf_token %}
+            {{ form.as_p }}
+            <button type="submit" class="w-full bg-indigo-600 text-white py-3 px-4 rounded-lg hover:bg-indigo-700 mt-6 font-semibold text-lg">Login</button>
+        </form>
+    </div>
+</div>
+{% endblock %}
