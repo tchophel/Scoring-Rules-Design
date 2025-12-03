@@ -2,7 +2,7 @@ import os
 from sqlalchemy import create_engine
 from sqlalchemy.orm import sessionmaker, declarative_base
 
-DATABASE_URL = os.getenv(
+DATABASE_URL = os.getenv("REFLEX_DB_URL") or os.getenv(
     "DATABASE_URL", "postgresql://postgres:postgres@localhost:5432/scorepredictor"
 )
 engine = create_engine(DATABASE_URL, pool_pre_ping=True, pool_size=10, max_overflow=20)
