@@ -1,6 +1,9 @@
 import reflex as rx
-from app.states.base_state import BaseState, hash_password, MOCK_USERS
+from app.states.base_state import BaseState
 from app.models import User
+from app.utils import hash_password
+from app.database.database import SessionLocal
+from app.database import service
 
 
 class AuthState(BaseState):
@@ -17,16 +20,25 @@ class AuthState(BaseState):
         """Handle login form submission."""
         username = form_data.get("username")
         password = form_data.get("password")
-        user = self._get_user_from_db(username)
-        if user and user.password_hash == hash_password(password):
-            if user.payment_status != "paid":
-                self.error_message = f"Account status: {user.payment_status}. Please contact admin for payment."
-                return
-            self.current_user = user
-            self.error_message = ""
-            return rx.redirect("/")
-        else:
-            self.error_message = "Invalid username or password."
+        with SessionLocal() as db:
+            user_sqla = service.get_user_by_username(db, username)
+            if user_sqla and user_sqla.password_hash == hash_password(password):
+                if user_sqla.payment_status != "paid":
+                    self.error_message = f"Account status: {user_sqla.payment_status}. Please contact admin for payment."
+                    return
+                self.current_user = User(
+                    id=user_sqla.id,
+                    username=user_sqla.username,
+                    password_hash=user_sqla.password_hash,
+                    is_admin=user_sqla.is_admin,
+                    total_points=user_sqla.total_points,
+                    payment_status=user_sqla.payment_status,
+                    created_at=str(user_sqla.created_at),
+                )
+                self.error_message = ""
+                return rx.redirect("/")
+            else:
+                self.error_message = "Invalid username or password."
 
     @rx.event
     def handle_register(self, form_data: dict):
@@ -43,17 +55,12 @@ class AuthState(BaseState):
         if not username:
             self.error_message = "Username is required."
             return
-        existing_user = self._get_user_from_db(username)
-        if existing_user:
-            self.error_message = "Username already taken."
-            return
-        new_user = User(
-            id=len(MOCK_USERS) + 1,
-            username=username,
-            password_hash=hash_password(password),
-            is_admin=False,
-            total_points=0,
-            payment_status="pending",
-        )
-        MOCK_USERS.append(new_user)
+        with SessionLocal() as db:
+            existing_user = service.get_user_by_username(db, username)
+            if existing_user:
+                self.error_message = "Username already taken."
+                return
+            service.create_user(
+                db, username=username, password_hash=hash_password(password)
+            )
         return rx.redirect("/login")

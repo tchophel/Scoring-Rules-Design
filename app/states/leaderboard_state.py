@@ -1,6 +1,8 @@
 import reflex as rx
-from app.states.base_state import BaseState, MOCK_USERS
+from app.states.base_state import BaseState
 from app.models import User
+from app.database.database import SessionLocal
+from app.database import service
 
 
 class LeaderboardState(BaseState):
@@ -11,5 +13,20 @@ class LeaderboardState(BaseState):
     @rx.event
     def load_leaderboard(self):
         """Load and sort users by total points."""
-        sorted_users = sorted(MOCK_USERS, key=lambda u: u.total_points, reverse=True)
-        self.ranked_users = [(i, u) for i, u in enumerate(sorted_users)]
+        with SessionLocal() as db:
+            leaderboard_sqla = service.get_leaderboard(db)
+            self.ranked_users = [
+                (
+                    i,
+                    User(
+                        id=u.id,
+                        username=u.username,
+                        password_hash=u.password_hash,
+                        is_admin=u.is_admin,
+                        total_points=u.total_points,
+                        payment_status=u.payment_status,
+                        created_at=str(u.created_at),
+                    ),
+                )
+                for i, u in enumerate(leaderboard_sqla)
+            ]

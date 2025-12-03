@@ -130,6 +130,7 @@ def index() -> rx.Component:
                 ),
                 class_name="bg-gray-50 py-16",
             ),
+            on_mount=BaseState.load_top_player,
             class_name="flex-grow",
         ),
         class_name="min-h-screen bg-white font-['Inter'] flex flex-col",

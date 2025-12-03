@@ -2,13 +2,10 @@ import reflex as rx
 import logging
 from typing import Optional
 from datetime import datetime, timedelta
-from app.states.base_state import (
-    BaseState,
-    MOCK_MATCHES,
-    MOCK_PREDICTIONS,
-    calculate_points_for_match,
-)
+from app.states.base_state import BaseState
 from app.models import Match, Prediction
+from app.database.database import SessionLocal
+from app.database import service
 
 
 class PredictionState(BaseState):
@@ -40,27 +37,52 @@ class PredictionState(BaseState):
     @rx.var
     def my_prediction_list(self) -> list[Prediction]:
         """Return list of predictions for the current user to display in My Predictions page."""
-        if not self.current_user:
-            return []
-        user_preds = [p for p in MOCK_PREDICTIONS if p.user_id == self.current_user.id]
-        return sorted(user_preds, key=lambda x: x.created_at, reverse=True)
+        return sorted(
+            list(self.my_predictions.values()), key=lambda x: x.created_at, reverse=True
+        )
 
     @rx.event
     def get_match_by_id(self, match_id: int) -> Optional[Match]:
-        for m in MOCK_MATCHES:
+        for m in self.matches:
             if m.id == match_id:
                 return m
         return None
 
     @rx.event
+    def set_active_tab(self, tab: str):
+        self.active_tab = tab
+
+    @rx.event
     def load_data(self):
         """Load matches and user predictions."""
-        self.matches = MOCK_MATCHES
-        self.my_predictions = {}
-        if self.current_user:
-            for pred in MOCK_PREDICTIONS:
-                if pred.user_id == self.current_user.id:
-                    self.my_predictions[pred.match_id] = pred
+        with SessionLocal() as db:
+            matches_sqla = service.get_matches(db)
+            self.matches = [
+                Match(
+                    id=m.id,
+                    team1=m.team1,
+                    team2=m.team2,
+                    start_time=str(m.start_time),
+                    status=m.status,
+                    team1_score=m.team1_score,
+                    team2_score=m.team2_score,
+                )
+                for m in matches_sqla
+            ]
+            self.my_predictions = {}
+            if self.current_user:
+                preds_sqla = service.get_user_predictions(db, self.current_user.id)
+                for p in preds_sqla:
+                    self.my_predictions[p.match_id] = Prediction(
+                        id=p.id,
+                        user_id=p.user_id,
+                        match_id=p.match_id,
+                        team1_prediction=p.team1_prediction,
+                        team2_prediction=p.team2_prediction,
+                        points_earned=p.points_earned,
+                        boost_active=p.boost_active,
+                        created_at=str(p.created_at),
+                    )
 
     @rx.event
     def submit_prediction(self, form_data: dict):
@@ -87,35 +109,34 @@ class PredictionState(BaseState):
         boost_active = bool(form_data.get("boost_active"))
         match = self.get_match_by_id(match_id)
         if not match:
-            yield rx.toast.error("Match not found.")
+            yield rx.toast.error("Match not found locally. Please refresh.")
             return
         start_time = datetime.fromisoformat(match.start_time)
         if datetime.now() > start_time - timedelta(minutes=5):
             yield rx.toast.error("Predictions are locked for this match.")
             return
-        existing_pred_index = -1
-        for i, p in enumerate(MOCK_PREDICTIONS):
-            if p.user_id == self.current_user.id and p.match_id == match_id:
-                existing_pred_index = i
-                break
-        if existing_pred_index != -1:
-            p = MOCK_PREDICTIONS[existing_pred_index]
-            p.team1_prediction = team1_pred
-            p.team2_prediction = team2_pred
-            p.boost_active = boost_active
-            self.my_predictions[match_id] = p
-            self.my_predictions = self.my_predictions.copy()
-            yield rx.toast.success("Prediction updated!")
-        else:
-            new_pred = Prediction(
-                id=len(MOCK_PREDICTIONS) + 1,
-                user_id=self.current_user.id,
-                match_id=match_id,
-                team1_prediction=team1_pred,
-                team2_prediction=team2_pred,
-                boost_active=boost_active,
-            )
-            MOCK_PREDICTIONS.append(new_pred)
-            self.my_predictions[match_id] = new_pred
-            self.my_predictions = self.my_predictions.copy()
-            yield rx.toast.success("Prediction submitted!")
+        with SessionLocal() as db:
+            try:
+                pred_sqla = service.create_or_update_prediction(
+                    db,
+                    user_id=self.current_user.id,
+                    match_id=match_id,
+                    team1_pred=team1_pred,
+                    team2_pred=team2_pred,
+                    boost_active=boost_active,
+                )
+                self.my_predictions[match_id] = Prediction(
+                    id=pred_sqla.id,
+                    user_id=pred_sqla.user_id,
+                    match_id=pred_sqla.match_id,
+                    team1_prediction=pred_sqla.team1_prediction,
+                    team2_prediction=pred_sqla.team2_prediction,
+                    points_earned=pred_sqla.points_earned,
+                    boost_active=pred_sqla.boost_active,
+                    created_at=str(pred_sqla.created_at),
+                )
+                self.my_predictions = self.my_predictions.copy()
+                yield rx.toast.success("Prediction submitted!")
+            except Exception as e:
+                logging.exception(f"Error saving prediction: {e}")
+                yield rx.toast.error("Failed to save prediction.")

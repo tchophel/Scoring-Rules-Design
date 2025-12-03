@@ -1,4 +1,4 @@
-# Sports Prediction App Implementation Plan
+# Sports Prediction App - PostgreSQL Migration Plan
 
 ## Phase 1: Database Schema, Auth System & Basic Layout ✅
 - [x] Create database models (User, Match, Prediction, Payment)
@@ -30,52 +30,27 @@
 - [x] Test points calculation with various scenarios
 - [x] Validate leaderboard sorting and admin panel functionality
 
-## Demo/Test Accounts
+---
 
-**Admin Account:**
-- Username: `admin`
-- Password: `admin123`
-- Access: Full admin panel
+## Phase 5: PostgreSQL Database Integration ✅
+- [x] Install PostgreSQL Python driver (psycopg2-binary)
+- [x] Create database configuration and connection management
+- [x] Implement SQLAlchemy ORM models for User, Match, Prediction, Payment
+- [x] Create database initialization script with table creation
+- [x] Build database service layer with CRUD operations
+- [x] Seed database with demo data (users, matches, predictions)
 
-**Test User Accounts:**
-- `user1` / `password1` (59 points)
-- `user2` / `password2` (79 points)
-- `user3` / `password3` (15 points)
-- `user4` / `password4` (32 points)
+## Phase 6: State Refactoring to Use Real Database ✅
+- [x] Refactor BaseState to use database instead of mock data
+- [x] Update AuthState for database authentication and registration
+- [x] Modify PredictionState to query and save predictions to database
+- [x] Update LeaderboardState to fetch sorted users from database
+- [x] Refactor AdminState for all CRUD operations with database
 
-**Demo Data Includes:**
-- 8 matches (2 upcoming, 1 live, 5 finished)
-- 19 predictions across different users
-- Points calculated based on actual vs predicted scores
-
-## Features Implemented
-
-✅ **Prediction Rules:**
-- 7 points: both scores exactly correct
-- 5 points: one score correct
-- 2 points: correct winner prediction
-- 0 points: completely wrong
-
-✅ **Editing Restrictions:**
-- 5-minute lockout before match starts
-- Free editing before lockout period
-
-✅ **Leaderboard:**
-- Top player highlighted on index page
-- Full leaderboard sorted by points (descending)
-
-✅ **Admin Panel:**
-- User management (view, edit roles, delete)
-- Match management (create, edit, delete, set scores)
-- Payment tracking
-- View all predictions
-
-✅ **Clean UI:**
-- Modern design with Tailwind CSS
-- Responsive layout
-- Intuitive navigation
-
-✅ **Secure Login:**
-- Password hashing with SHA-256
-- Session management
-- Role-based access control
+## Phase 7: Production Features & Testing
+- [ ] Add database connection pooling for performance
+- [ ] Implement proper error handling and logging
+- [ ] Add database migrations support
+- [ ] Test all features with real database (auth, predictions, leaderboard, admin panel)
+- [ ] Verify data persistence across app restarts
+- [ ] Test concurrent user access and data consistency
