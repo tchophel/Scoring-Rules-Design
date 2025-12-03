@@ -1,6 +1,6 @@
 import reflex as rx
 from app.states.prediction_state import PredictionState
-from app.components.navbar import navbar
+from app.components.page import page_layout
 from app.models import Match, Prediction
 
 
@@ -286,89 +286,76 @@ def match_card(match: Match) -> rx.Component:
 
 
 def matches_page() -> rx.Component:
-    return rx.el.div(
-        navbar(),
+    return page_layout(
         rx.el.div(
-            rx.el.div(
-                rx.el.h1(
-                    "Match Center", class_name="text-3xl font-bold text-gray-900 mb-2"
+            rx.el.nav(
+                rx.el.button(
+                    "Upcoming",
+                    on_click=PredictionState.set_active_tab("upcoming"),
+                    class_name=rx.cond(
+                        PredictionState.active_tab == "upcoming",
+                        "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm",
+                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm",
+                    ),
                 ),
-                rx.el.p(
-                    "Predict scores for upcoming matches and track live games.",
-                    class_name="text-gray-600 mb-8",
+                rx.el.button(
+                    "Live",
+                    on_click=PredictionState.set_active_tab("live"),
+                    class_name=rx.cond(
+                        PredictionState.active_tab == "live",
+                        "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
+                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
+                    ),
+                ),
+                rx.el.button(
+                    "Finished",
+                    on_click=PredictionState.set_active_tab("finished"),
+                    class_name=rx.cond(
+                        PredictionState.active_tab == "finished",
+                        "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
+                        "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
+                    ),
+                ),
+                class_name="-mb-px flex space-x-8",
+            ),
+            class_name="border-b border-gray-200 mb-8 overflow-x-auto",
+        ),
+        rx.cond(
+            PredictionState.active_tab == "upcoming",
+            rx.el.div(
+                rx.foreach(PredictionState.upcoming_matches, match_card),
+                class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
+            ),
+            rx.fragment(),
+        ),
+        rx.cond(
+            PredictionState.active_tab == "live",
+            rx.cond(
+                PredictionState.live_matches.length() > 0,
+                rx.el.div(
+                    rx.foreach(PredictionState.live_matches, match_card),
+                    class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
                 ),
                 rx.el.div(
-                    rx.el.nav(
-                        rx.el.button(
-                            "Upcoming",
-                            on_click=PredictionState.set_active_tab("upcoming"),
-                            class_name=rx.cond(
-                                PredictionState.active_tab == "upcoming",
-                                "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm",
-                                "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm",
-                            ),
-                        ),
-                        rx.el.button(
-                            "Live",
-                            on_click=PredictionState.set_active_tab("live"),
-                            class_name=rx.cond(
-                                PredictionState.active_tab == "live",
-                                "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
-                                "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
-                            ),
-                        ),
-                        rx.el.button(
-                            "Finished",
-                            on_click=PredictionState.set_active_tab("finished"),
-                            class_name=rx.cond(
-                                PredictionState.active_tab == "finished",
-                                "border-indigo-500 text-indigo-600 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
-                                "border-transparent text-gray-500 hover:text-gray-700 hover:border-gray-300 whitespace-nowrap py-4 px-1 border-b-2 font-medium text-sm ml-8",
-                            ),
-                        ),
-                        class_name="-mb-px flex space-x-8",
+                    rx.icon("radio", class_name="h-12 w-12 text-gray-300 mb-3"),
+                    rx.el.p(
+                        "No live matches at the moment.",
+                        class_name="text-gray-500",
                     ),
-                    class_name="border-b border-gray-200 mb-8 overflow-x-auto",
+                    class_name="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200",
                 ),
-                rx.cond(
-                    PredictionState.active_tab == "upcoming",
-                    rx.el.div(
-                        rx.foreach(PredictionState.upcoming_matches, match_card),
-                        class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
-                    ),
-                    rx.fragment(),
-                ),
-                rx.cond(
-                    PredictionState.active_tab == "live",
-                    rx.cond(
-                        PredictionState.live_matches.length() > 0,
-                        rx.el.div(
-                            rx.foreach(PredictionState.live_matches, match_card),
-                            class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
-                        ),
-                        rx.el.div(
-                            rx.icon("radio", class_name="h-12 w-12 text-gray-300 mb-3"),
-                            rx.el.p(
-                                "No live matches at the moment.",
-                                class_name="text-gray-500",
-                            ),
-                            class_name="text-center py-12 bg-gray-50 rounded-xl border-2 border-dashed border-gray-200",
-                        ),
-                    ),
-                    rx.fragment(),
-                ),
-                rx.cond(
-                    PredictionState.active_tab == "finished",
-                    rx.el.div(
-                        rx.foreach(PredictionState.finished_matches, match_card),
-                        class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
-                    ),
-                    rx.fragment(),
-                ),
-                class_name="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8",
             ),
-            class_name="py-10 bg-gray-50 min-h-screen",
+            rx.fragment(),
         ),
+        rx.cond(
+            PredictionState.active_tab == "finished",
+            rx.el.div(
+                rx.foreach(PredictionState.finished_matches, match_card),
+                class_name="grid gap-6 md:grid-cols-2 xl:grid-cols-3",
+            ),
+            rx.fragment(),
+        ),
+        title="Match Center",
+        description="Predict scores for upcoming matches and track live games.",
         on_mount=PredictionState.load_data,
-        class_name="font-['Inter']",
     )
