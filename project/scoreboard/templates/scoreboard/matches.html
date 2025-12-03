@@ -1,0 +1,39 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matches</title>
+    <link href="https-deep-thought-418605.web.app/app/pages/leaderboard.py" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-['Inter']">
+    <div class="py-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-bold text-gray-900">Matches</h1>
+            </div>
+            <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                {% for match in matches %}
+                <div class="bg-white p-6 shadow sm:rounded-lg">
+                    <div class="flex justify-between items-center mb-4">
+                        <span class="text-sm font-medium text-gray-500">{{ match.start_time|date:"F j, Y, P" }}</span>
+                        <span class="px-2 inline-flex text-xs leading-5 font-semibold rounded-full
+                            {% if match.status == 'upcoming' %} bg-yellow-100 text-yellow-800
+                            {% elif match.status == 'live' %} bg-green-100 text-green-800
+                            {% else %} bg-red-100 text-red-800 {% endif %}">
+                            {{ match.status }}
+                        </span>
+                    </div>
+                    <div class="text-center">
+                        <h2 class="text-xl font-bold">{{ match.team1 }} vs {{ match.team2 }}</h2>
+                        {% if match.team1_score is not None and match.team2_score is not None %}
+                        <p class="text-2xl font-bold">{{ match.team1_score }} - {{ match.team2_score }}</p>
+                        {% endif %}
+                    </div>
+                </div>
+                {% endfor %}
+            </div>
+        </div>
+    </div>
+</body>
+</html>

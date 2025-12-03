@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Login</title>
+    <link href="https-deep-thought-418605.web.app/app/pages/leaderboard.py" rel="stylesheet">
+</head>
+<body class="bg-gray-50 font-['Inter']">
+    <div class="py-10">
+        <div class="max-w-md mx-auto">
+            <div class="text-center mb-10">
+                <h1 class="text-3xl font-bold text-gray-900">Sign In</h1>
+            </div>
+            <div class="bg-white p-8 shadow sm:rounded-lg">
+                <form method="post">
+                    {% csrf_token %}
+                    {{ form.as_p }}
+                    <button type="submit" class="w-full bg-indigo-600 text-white py-2 px-4 rounded-md hover:bg-indigo-700">Login</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</body>
+</html>
